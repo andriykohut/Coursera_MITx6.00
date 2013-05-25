@@ -131,6 +131,39 @@ def bruteForceSearch(digraph, start, end, maxTotalDist, maxDistOutdoors):
 #
 # Problem 4: Finding the Shorest Path using Optimized Search Method
 #
+
+def find_all_satisfying_paths(graph, start, end, path, maxTotalDist, maxDistOutdoors):
+    '''
+    Helper function that finds all paths in graph that starts at start node and ends at
+    end node. return a list of paths. Each path is a dictationary, with this key-value pairs:
+    nodes -> list of nodes in path, distance -> integer (total path length),
+    outdoors -> integer (outdoor path length)
+    '''
+    # add start node to path
+    path['nodes'] = path['nodes'] + [start]
+    if start == end:
+        return [path]
+    if not graph.hasNode(start):
+        return []
+    paths = []
+    # childrenOf return pair (node, (total distance, otdoor distance))
+    for node, distances in graph.childrenOf(start):
+        # avoid cycles
+        if node not in path['nodes']:
+            # initialize next path
+            next_path = {}
+            # copy nodes from previous path
+            next_path['nodes'] = path['nodes']
+            # increment path distances
+            next_path['distance'] = path['distance'] + int(distances[0])
+            next_path['outdoors'] = path['outdoors'] + int(distances[1])
+            # recur from current node as start with next_path
+            if next_path['distance'] <= maxTotalDist and next_path['outdoors'] <= maxDistOutdoors:
+                newpaths = find_all_satisfying_paths(graph, node, end, next_path, maxTotalDist, maxDistOutdoors)
+                for newpath in newpaths:
+                    paths.append(newpath)
+    return paths
+
 def directedDFS(digraph, start, end, maxTotalDist, maxDistOutdoors):
     """
     Finds the shortest path from start to end using directed depth-first.
@@ -156,8 +189,10 @@ def directedDFS(digraph, start, end, maxTotalDist, maxDistOutdoors):
         If there exists no path that satisfies maxTotalDist and
         maxDistOutdoors constraints, then raises a ValueError.
     """
-    #TODO
-    pass
+    start_path = {'nodes': [], 'distance': 0, 'outdoors': 0}
+    all_paths = find_all_satisfying_paths(digraph, Node(start), Node(end), start_path, maxTotalDist, maxDistOutdoors)
+    best_path = min(all_paths, key = lambda x: x['distance'])
+    return [str(node) for node in best_path['nodes']]
 
 # Uncomment below when ready to test
 ###NOTE! These tests may take a few minutes to run!! ####
